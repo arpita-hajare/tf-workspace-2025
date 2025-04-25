@@ -1,15 +1,27 @@
-#### ---create service account-----
-
-resource "google_service_account" "devops_sa" {
-  account_id   = var.service_account_id
-  display_name = var.service_account_display_name
+module "service_account" {
+  source       = "terraform-google-modules/service-accounts/google//modules/simple-sa"
+  version      = "~> 4.0"
+  project_id   = var.project_id
+  prefix        = "test-sa"
+  description  = "Cloud Run service account"
+  display_name = "Cloud Run service account"
+  project_roles = [
+    "roles/run.admin",
+    "roles/artifactregistry.writer",
+    "roles/iam.serviceAccountUser",
+    "roles/artifactregistry.repoAdmin",
+    "roles/secretmanager.secretAccessor",
+    "roles/logging.logWriter",
+    "roles/cloudfunctions.admin",
+    #"roles/pubsub.editor",
+    "roles/logging.configWriter",
+    "roles/run.invoker",
+    "roles/run.developer",
+    "roles/storage.objectViewer"
+  ]
 }
 
-resource "google_project_iam_member" "devops_sa_roles" {
-  project = var.project_id
-  role    = "roles/editor"  # or more granular like roles/storage.admin, etc.
-  member  = "serviceAccount:${google_service_account.devops_sa.email}"
-}
-output "service_account_email" {
-  value = google_service_account.devops_sa.email
+# Create a service account key
+resource "google_service_account_key" "clrun_sa_key" {
+  service_account_id = module.service_account.email
 }
